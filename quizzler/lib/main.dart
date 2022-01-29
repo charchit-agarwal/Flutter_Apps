@@ -1,7 +1,6 @@
-import 'dart:html';
-
 import 'package:flutter/material.dart';
-import 'package:quizzler/question.dart';
+import 'package:quizzler/questionBank.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,12 +35,40 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   List<Icon> score = [];
-  List<Question> questions = [
-    Question('You can lead a cow down stairs but not up stairs.',false),
-    Question('Approximately one quarter of human bones are in the feet.', true),
-    Question('A slug\'s blood is green.',true)
-  ];
-  int questionNo=0;
+  QuestionBank questionBank = QuestionBank();
+  void checkAns(bool userPickedAns) {
+    setState(() {
+      if (questionBank.isFinished()) {
+        Alert(context: context, title: "Reached End", buttons: [
+          DialogButton(
+              child: const Text(
+                "Restart",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              onPressed: () {
+                setState(() {
+                  questionBank.reset();
+                  score.clear();
+                  Navigator.pop(context);
+                });
+              }),
+        ]).show();
+      }else{
+      if (questionBank.questionAnswer() == userPickedAns) {
+        score.add(const Icon(
+          Icons.check,
+          color: Colors.green,
+        ));
+      } else {
+        score.add(const Icon(
+          Icons.close,
+          color: Colors.red,
+        ));
+      }}
+      questionBank.nextQuestion();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -51,12 +78,12 @@ class _QuizPageState extends State<QuizPage> {
         Expanded(
           flex: 5,
           child: Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                questions[questionNo].questionText,
+                questionBank.questionText(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 25.0,
                   color: Colors.white,
                 ),
@@ -70,24 +97,18 @@ class _QuizPageState extends State<QuizPage> {
             child: FlatButton(
               textColor: Colors.white,
               color: Colors.green,
-              child:const Text(
+              child: const Text(
                 'True',
-                style:  TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 20.0,
                 ),
               ),
               onPressed: () {
-                //The user picked true.
-                setState(() {
-                  if(questions[questionNo].questionAnswer==true){
-                    score.add(Icon(Icons.check,color: Colors.green,));
-                  }
-                  else{
-                    score.add(Icon(Icons.close,color: Colors.red,));
-                  }
-                  questionNo++;
-                });
+                //The user picked true
+
+                  checkAns(true);
+
               },
             ),
           ),
@@ -97,7 +118,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: const EdgeInsets.all(15.0),
             child: FlatButton(
               color: Colors.red,
-              child:const Text(
+              child: const Text(
                 'False',
                 style: TextStyle(
                   fontSize: 20.0,
@@ -106,20 +127,16 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 //The user picked false.
-                setState(() {
-                  if(questions[questionNo].questionAnswer==false){
-                    score.add(Icon(Icons.check,color: Colors.green,));
-                  }
-                  else{
-                    score.add(Icon(Icons.close,color: Colors.red,));
-                  }
-                  questionNo++;
-                });
+
+                  checkAns(true);
+
               },
             ),
           ),
         ),
-        Row(children: score,)
+        Row(
+          children: score,
+        )
       ],
     );
   }
